@@ -9,6 +9,7 @@ public class PrefabParseToXMl : Editor
     //将所有游戏场景导出为XML格式
     [MenuItem("Assets/PrefabParseToXMl", false, 1)]
     [MenuItem("GameObject/PrefabParseToXMl", false, 1)]
+    [MenuItem("Window/PrefabParseToXMl")]
     private static void ExportXML()
     {
         // string filepath = Application.dataPath + @"/../UnityPrefabParseXml/ParseXml.xml";
@@ -27,7 +28,7 @@ public class PrefabParseToXMl : Editor
                 //当关卡启用
                 if (selectPrefab != null)
                 {
-                    root.SetAttribute("class", selectPrefab.name);
+                    root.SetAttribute("class", selectPrefab.name + "Skin");
                     var selectGameObj = selectPrefab as GameObject;
                     ParseChildren(xmlDoc, root, selectGameObj.transform);
                     root.SetAttribute("width", Screen.width.ToString());
@@ -76,7 +77,7 @@ public class PrefabParseToXMl : Editor
         for (int i = 0; i < currentGObjTsf.childCount; i++)
         {
             var child = currentGObjTsf.GetChild(i);
-            var childGameObj = xmlDoc.CreateElement("Group");
+            var childGameObj = xmlDoc.CreateElement("e:Group");
             childGameObj.SetAttribute("id", child.name);
             childGameObj.SetAttribute("visible", child.gameObject.activeSelf.ToString().ToLower());
             // Debug.Log($"childName:{child.name},childCount:{child.childCount}");
@@ -110,17 +111,17 @@ public class PrefabParseToXMl : Editor
                     case nameof(RectTransform):
                         var rectTransform = component as RectTransform;
                         componentProps = xmlDoc.CreateElement(nameof(RectTransform));
-                        componentProps.SetAttribute("x", (int)rectTransform.localPosition.x + "");
-                        componentProps.SetAttribute("y", (int)rectTransform.localPosition.y + "");
+                        gameObject.SetAttribute("x", (int)rectTransform.localPosition.x + "");
+                        gameObject.SetAttribute("y", (int)rectTransform.localPosition.y + "");
                         componentProps.SetAttribute("scaleX", (int)rectTransform.localScale.x + "");
                         componentProps.SetAttribute("scaleY", (int)rectTransform.localScale.y + "");
-                        componentProps.SetAttribute("rotation", "(" + (int)rectTransform.localEulerAngles.x + "," + (int)rectTransform.localEulerAngles.y + "," + (int)rectTransform.localEulerAngles.z + ")");
+                        componentProps.SetAttribute("rotation", (int)rectTransform.localEulerAngles.z + "");
                         componentProps.SetAttribute("width", (int)rectTransform.rect.width + "");
                         componentProps.SetAttribute("height", (int)rectTransform.rect.height + "");
                         componentProps.SetAttribute("anchorOffsetX", (int)rectTransform.pivot.x + "");
                         componentProps.SetAttribute("anchorOffsetY", (int)rectTransform.pivot.y + "");
-                        componentProps.SetAttribute("anchorMin", rectTransform.anchorMin.ToString() + "");
-                        componentProps.SetAttribute("anchorMax", rectTransform.anchorMax.ToString() + "");
+                        // componentProps.SetAttribute("anchorMin", rectTransform.anchorMin.ToString() + "");
+                        // componentProps.SetAttribute("anchorMax", rectTransform.anchorMax.ToString() + "");
                         if (rectTransform.anchorMin == new Vector2(0.5f, 0.5f) && rectTransform.anchorMax == new Vector2(0.5f, 0.5f))
                         {
                             componentProps.SetAttribute("horizontalCenter", 0 + "");
@@ -232,7 +233,6 @@ public class PrefabParseToXMl : Editor
                                 break;
                             case Button.Transition.ColorTint:
                                 componentProps.SetAttribute("targetGraphic", button.targetGraphic.name);
-                                
                                 break;
                             case Button.Transition.SpriteSwap:
                                 break;
@@ -273,8 +273,16 @@ public class PrefabParseToXMl : Editor
                         componentProps.SetAttribute("normal", (text.fontStyle == FontStyle.Normal).ToString());
                         componentProps.SetAttribute("bold", (text.fontStyle == FontStyle.Bold).ToString());
                         componentProps.SetAttribute("italic", (text.fontStyle == FontStyle.Italic).ToString());
-                        componentProps.SetAttribute("boldAndItalic", (text.fontStyle == FontStyle.BoldAndItalic).ToString());
-                        componentProps.SetAttribute("verticalAlignAndTextAlign", text.alignment.ToString());
+                        if (text.fontStyle == FontStyle.BoldAndItalic)
+                        {
+                            componentProps.SetAttribute("bold", "true");
+                            componentProps.SetAttribute("italic", "true");
+                        }
+                        if (text.alignment.ToString() == "MiddleCenter")
+                        {
+                            componentProps.SetAttribute("verticalAlign", "center");
+                            componentProps.SetAttribute("TextAlign", "center");
+                        }
                         componentProps.SetAttribute("lineSpacing", (int)text.lineSpacing + "");
                         break;
                     case nameof(Slider):
@@ -290,19 +298,23 @@ public class PrefabParseToXMl : Editor
                         componentProps = xmlDoc.CreateElement("e:List");
                         break;
                     //我们项目自己写的一个脚本OutlineEx,测试用不了，必须在项目中才能开启
-                    case "OutlineEx":
-                        // var outLine = component as OutlineEx;
-                        componentProps = xmlDoc.CreateElement("e:OutLine");
-                        // componentProps.SetAttribute("stroke", outLine.OutlineWidth);
-                        // componentProps.SetAttribute("strokeColor", outLine.OutlineColor);
-                        break;
+                    //case "OutlineEx":
+                    // var outLine = component as OutlineEx;
+                    //componentProps = xmlDoc.CreateElement("e:OutLine");
+                    // componentProps.SetAttribute("stroke", outLine.OutlineWidth);
+                    // componentProps.SetAttribute("strokeColor", outLine.OutlineColor);
+                    //break;
                     default:
-                        componentProps = xmlDoc.CreateElement($"{componentName}");
+                        //componentProps = xmlDoc.CreateElement($"{componentName}");
+                        componentProps = null;
                         break;
 
                 }
-                componentProps.SetAttribute("visible", component.GetType().IsVisible.ToString().ToLower());
-                gameObject.AppendChild(componentProps);
+                if (componentProps != null)
+                {
+                    componentProps.SetAttribute("visible", component.GetType().IsVisible.ToString().ToLower());
+                    gameObject.AppendChild(componentProps);
+                }
             }
         }
     }
