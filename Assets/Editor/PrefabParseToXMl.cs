@@ -36,19 +36,11 @@ public class PrefabParseToXMl : Editor
                     canvasGameObj.SetAttribute("visible", selectGameObj.gameObject.activeSelf.ToString().ToLower());
                     canvasGameObj.SetAttribute("width", canvasRectTsf.rect.width.ToString());
                     canvasGameObj.SetAttribute("height", canvasRectTsf.rect.height.ToString());
-                    if (canvasRectTsf.anchorMin == canvasRectTsf.anchorMax)
-                    {
-                        canvasGameObj.SetAttribute("x", (canvasRectTsf.GetComponent<RectTransform>().rect.width * canvasRectTsf.anchorMin.x + canvasRectTsf.localPosition.x).ToString());
-                        canvasGameObj.SetAttribute("y", (canvasRectTsf.GetComponent<RectTransform>().rect.height * (1 - canvasRectTsf.anchorMin.y) - canvasRectTsf.localPosition.y).ToString());
-                    }
-                    else
-                    {
-                        canvasGameObj.SetAttribute("horizontalCenter", 0.ToString());
-                        canvasGameObj.SetAttribute("verticalCenter", 0.ToString());
-                    };
+                    canvasGameObj.SetAttribute("x", (canvasRectTsf.GetComponent<RectTransform>().rect.width * (canvasRectTsf.anchorMax.x + canvasRectTsf.anchorMin.x) / 2 + canvasRectTsf.anchoredPosition.x).ToString());
+                    canvasGameObj.SetAttribute("y", (canvasRectTsf.GetComponent<RectTransform>().rect.height * (1 - (canvasRectTsf.anchorMax.y + canvasRectTsf.anchorMin.y) / 2) - canvasRectTsf.anchoredPosition.y).ToString());
                     canvasGameObj.SetAttribute("scaleX", canvasRectTsf.localScale.x.ToString());
                     canvasGameObj.SetAttribute("scaleY", canvasRectTsf.localScale.y.ToString());
-                    canvasGameObj.SetAttribute("anchorOffsetX", ((1 - canvasRectTsf.pivot.x) * canvasRectTsf.rect.width).ToString());
+                    canvasGameObj.SetAttribute("anchorOffsetX", (canvasRectTsf.pivot.x * canvasRectTsf.rect.width).ToString());
                     canvasGameObj.SetAttribute("anchorOffsetY", ((1 - canvasRectTsf.pivot.y) * canvasRectTsf.rect.height).ToString());
                     // Debug.Log($"width:{canvasRectTsf.rect.width},height:{canvasRectTsf.rect.height},x:{ canvasRectTsf.localPosition.x},y: { canvasRectTsf.localPosition.y},scaleX: { canvasRectTsf.localScale.x},scaleY: { canvasRectTsf.localScale.y}");
                     root.AppendChild(canvasGameObj);
@@ -76,21 +68,13 @@ public class PrefabParseToXMl : Editor
             var childRectTsf = child.GetComponent<RectTransform>();
             childGameObj.SetAttribute("name", child.name);
             childGameObj.SetAttribute("visible", child.gameObject.activeSelf.ToString().ToLower());
-            if (childRectTsf.anchorMin == childRectTsf.anchorMax)
-            {
-                childGameObj.SetAttribute("x", (currentGObjTsf.GetComponent<RectTransform>().rect.width * childRectTsf.anchorMin.x + childRectTsf.localPosition.x).ToString());
-                childGameObj.SetAttribute("y", (currentGObjTsf.GetComponent<RectTransform>().rect.height * (1 - childRectTsf.anchorMin.y) - childRectTsf.localPosition.y).ToString());
-            }
-            else
-            {
-                childGameObj.SetAttribute("horizontalCenter", 0.ToString());
-                childGameObj.SetAttribute("verticalCenter", 0.ToString());
-            };
+            childGameObj.SetAttribute("x", (currentGObjTsf.GetComponent<RectTransform>().rect.width * (childRectTsf.anchorMax.x + childRectTsf.anchorMin.x) / 2 + childRectTsf.anchoredPosition.x).ToString());
+            childGameObj.SetAttribute("y", (currentGObjTsf.GetComponent<RectTransform>().rect.height * (1 - (childRectTsf.anchorMax.y + childRectTsf.anchorMin.y) / 2) - childRectTsf.anchoredPosition.y).ToString());
             childGameObj.SetAttribute("width", childRectTsf.rect.width.ToString());
             childGameObj.SetAttribute("height", childRectTsf.rect.height.ToString());
             childGameObj.SetAttribute("scaleX", childRectTsf.localScale.x.ToString());
             childGameObj.SetAttribute("scaleY", childRectTsf.localScale.y.ToString());
-            childGameObj.SetAttribute("anchorOffsetX", ((1 - childRectTsf.pivot.x) * childRectTsf.rect.width).ToString());
+            childGameObj.SetAttribute("anchorOffsetX", (childRectTsf.pivot.x * childRectTsf.rect.width).ToString());
             childGameObj.SetAttribute("anchorOffsetY", ((1 - childRectTsf.pivot.y) * childRectTsf.rect.height).ToString());
             if (child.childCount > 0)
             {
@@ -136,12 +120,14 @@ public class PrefabParseToXMl : Editor
                         {
                             componentProps.SetAttribute("source", "white_png");
                         }
+                        componentProps.SetAttribute("visible", image.enabled.ToString().ToLower());
                         break;
                     case nameof(Button):
                         var button = component as Button;
                         componentProps = xmlDoc.CreateElement("e:Button");
                         componentProps.SetAttribute("label", "");
                         componentProps.SetAttribute("enabled", button.interactable.ToString().ToLower());
+                        componentProps.SetAttribute("visible", button.enabled.ToString().ToLower());
                         break;
                     case nameof(Text):
                         var text = component as Text;
@@ -202,32 +188,38 @@ public class PrefabParseToXMl : Editor
                         componentProps.SetAttribute("verticalAlign", verticalAlign);
                         componentProps.SetAttribute("textAlign", textAlign);
                         componentProps.SetAttribute("lineSpacing", (int)text.lineSpacing + "");
+                        componentProps.SetAttribute("visible", text.enabled.ToString().ToLower());
                         break;
                     case nameof(InputField):
                         var inputField = component as InputField;
                         componentProps = xmlDoc.CreateElement("e:EditableText");
                         componentProps.SetAttribute("text", inputField.text);
+                        componentProps.SetAttribute("visible", inputField.enabled.ToString().ToLower());
                         break;
                     case nameof(Slider):
                         var slider = component as Slider;
                         componentProps = xmlDoc.CreateElement("e:ProgressBar");
                         componentProps.SetAttribute("enabled", slider.interactable.ToString().ToLower());
+                        componentProps.SetAttribute("visible", slider.enabled.ToString().ToLower());
                         break;
                     case nameof(Scrollbar):
                         var scrollbar = component as Scrollbar;
                         componentProps = xmlDoc.CreateElement("e:Scroller");
                         componentProps.SetAttribute("enabled", scrollbar.interactable.ToString().ToLower());
+                        componentProps.SetAttribute("visible", scrollbar.enabled.ToString().ToLower());
                         break;
                     case nameof(ScrollRect):
                         var scrollRect = component as ScrollRect;
                         componentProps = xmlDoc.CreateElement("e:List");
+                        componentProps.SetAttribute("visible", scrollRect.enabled.ToString().ToLower());
                         break;
                     //我们项目自己写的一个脚本OutlineEx,测试用不了，必须在项目中才能开启
                     //case "OutlineEx":
                     // var outLine = component as OutlineEx;
                     //componentProps = xmlDoc.CreateElement("e:OutLine");
                     // componentProps.SetAttribute("stroke", outLine.OutlineWidth);
-                    // componentProps.SetAttribute("strokeColor", outLine.OutlineColor);
+                    // componentProps.SetAttribute("strokeColor", outLine.OutlineColor)
+                    // componentProps.SetAttribute("visible", outLine.enabled.ToString().ToLower());
                     //break;
                     default:
                         break;
@@ -235,15 +227,12 @@ public class PrefabParseToXMl : Editor
                 if (componentProps != null)
                 {
                     var rectTransform = component.GetComponent<RectTransform>();
-                    componentProps.SetAttribute("visible", component.GetType().IsVisible.ToString().ToLower());
                     componentProps.SetAttribute("width", rectTransform.rect.width.ToString());
                     componentProps.SetAttribute("height", rectTransform.rect.height.ToString());
-                    componentProps.SetAttribute("horizontalCenter", 0.ToString());
-                    componentProps.SetAttribute("verticalCenter", 0.ToString());
-                    componentProps.SetAttribute("anchorOffsetX", ((1 - rectTransform.pivot.x) * rectTransform.rect.width).ToString());
-                    componentProps.SetAttribute("anchorOffsetY", ((1 - rectTransform.pivot.y) * rectTransform.rect.height).ToString());
-                    componentProps.SetAttribute("scaleX", rectTransform.localScale.x.ToString());
-                    componentProps.SetAttribute("scaleY", rectTransform.localScale.y.ToString());
+                    componentProps.SetAttribute("right", 0.ToString());
+                    componentProps.SetAttribute("left", 0.ToString());
+                    componentProps.SetAttribute("top", 0.ToString());
+                    componentProps.SetAttribute("bottom", 0.ToString());
                     gameObject.AppendChild(componentProps);
                 }
             }
